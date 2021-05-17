@@ -1,0 +1,56 @@
+#load required packages
+library(plot.matrix)
+library(matrixcalc)
+library(expm)
+library(ggplot2)
+
+
+#create vectors of positions of ladders & snakes
+ladders_from <- c(3,15,22,25,41,53,63,76,82)
+ladders_to <- c(19,37,42,64,73,74,86,91,98)
+
+snakes_from <- c(11,18,28,36,77,47,83,92,99)
+snakes_to <- c(7,13,12,16,34,26,39,75,70)
+
+#num1 stores the position at each throw
+num <- rep(0,4)
+num1 <- matrix(data = num,nrow = 1,ncol = 4)
+
+#x1 stores the number that appeared on the uppermost face of the die
+x1 <- matrix(data = num,nrow = 1,ncol = 4)
+
+
+#keep the loop running until someone wins the game
+#for simplicity, we allow a player to win if he scores more than 100
+while(max(num) < 100){
+  
+  x <- round(runif(n = 4,min = 1,max = 6),0)
+  x1 <- append(x1,x)
+  num <- num + x
+  
+  #calculate position of each player
+  for(i in 1:ncol(num1)){
+    if(num[i] %in% ladders_from){
+      num[i] <- ladders_to[which(ladders_from==num[i])]
+    }
+    if(num[i] %in% snakes_from){
+      num[i] <- snakes_to[which(snakes_from==num[i])]
+    }
+  }
+  num1 <- rbind(num1,num)
+}
+
+
+#visualize the path of each player
+
+game_viz <- data.frame("Player" = rep("A",nrow(num1)),"Position" = num1[,1],"Throw" = 1:length(num1[,1]))
+game_viz <- rbind(game_viz,data.frame("Player" = rep("B",nrow(num1)),"Position" = num1[,2],"Throw" = 1:nrow(num1)))
+game_viz <- rbind(game_viz,data.frame("Player" = rep("C",nrow(num1)),"Position" = num1[,3],"Throw" = 1:nrow(num1)))
+game_viz <- rbind(game_viz,data.frame("Player" = rep("D",nrow(num1)),"Position" = num1[,4],"Throw" = 1:nrow(num1)))
+
+
+ggplot(game_viz, aes(x = Throw, y = Position, colour = Player)) +
+  geom_line(size = 1.1) + scale_x_continuous(limits = c(0,nrow(num1))) +
+  ggtitle("A simulation of snakes & ladders") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
